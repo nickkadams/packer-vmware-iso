@@ -1,0 +1,131 @@
+{
+  "builders": [{
+    "name": "{{user `vm_name`}}",
+    "vm_name": "{{user `vm_name`}}_{{isotime \"2006-01-02\"}}",
+    "type": "vmware-iso",
+    "guest_os_type": "ubuntu-64",
+    "headless": false,
+
+    "iso_urls": [
+      "ubuntu-16.04.6-server-amd64.iso",
+      "http://releases.ubuntu.com/xenial/ubuntu-16.04.6-server-amd64.iso"
+    ],
+    "iso_checksum": "16afb1375372c57471ea5e29803a89a5a6bd1f6aabea2e5e34ac1ab7eb9786ac",
+    "iso_checksum_type": "sha256",
+
+    "ssh_username": "{{user `vm_username`}}",
+    "ssh_password": "{{user `vm_username`}}",
+    "ssh_timeout": "15m",
+
+    "vnc_port_min": "5900",
+    "vnc_port_max": "5911",
+    "vnc_bind_address": "0.0.0.0",
+    "vnc_disable_password": "true",
+
+    "vmdk_name": "{{user `vm_name`}}",
+    "disk_size": 25600,
+    "disk_type_id": "thin",
+
+    "floppy_files": [
+      "./preseed/ubuntu16.cfg"
+    ],
+
+    "boot_command": [
+      "<enter><wait><f6><esc><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>",
+      "<bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>",
+      "<bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>",
+      "<bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>",
+      "/install/vmlinuz noapic ",
+      "preseed/file=/floppy/ubuntu16.cfg ",
+      "debian-installer=en_US auto locale=en_US.UTF-8 kbd-chooser/method=us ",
+      "hostname={{user `vm_name`}} ",
+      "fb=false debconf/frontend=noninteractive ",
+      "keyboard-configuration/modelcode=SKIP keyboard-configuration/layout=USA ",
+      "keyboard-configuration/variant=USA console-setup/ask_detect=false ",
+      "grub-installer/bootdev=/dev/sda ",
+      "net.ifnames=0 biosdevname=0 ",
+      "ipv6.disable=1 ",
+      "initrd=/install/initrd.gz -- <enter>"
+    ],
+
+    "shutdown_command": "echo {{user `vm_username`}} | sudo -S /sbin/halt -h -p",
+
+    "remote_type": "esx5",
+    "remote_host": "{{user `esxi_host`}}",
+    "remote_datastore": "{{user `esxi_datastore`}}",
+    "remote_username": "{{user `esxi_username`}}",
+    "remote_password": "{{user `esxi_password`}}",
+    "keep_registered": true,
+    "skip_export": true,
+
+    "vmx_data": {
+      "virtualHW.version": "14",
+      "ethernet0.networkName": "{{user `vm_network`}}",
+      "ethernet0.present": "TRUE",
+      "ethernet0.virtualDev": "vmxnet3",
+      "ethernet0.addressType": "static",
+      "ethernet0.address": "{{user `vm_mac`}}",
+      "memsize": "1024",
+      "numvcpus": "1",
+      "cpuid.coresPerSocket": "1",
+      "annotation": "{{user `vm_name`}}_{{isotime \"2006-01-02\"}}"
+    },
+    "vmx_data_post": {
+      "ethernet0.addressType": "generated"
+    }
+  }],
+
+ "provisioners": [
+    {
+      "type": "shell",
+      "inline": [
+        "sudo usermod -G sudo {{user `vm_username`}}",
+        "sudo usermod -a -G systemd-journal {{user `vm_username`}}",
+        "sudo apt-get install -y open-vm-tools=2:10.0.7-3227872-2ubuntu1",
+        "echo open-vm-tools hold | sudo dpkg --set-selections",
+        "sudo apt-get update -qy",
+        "sudo DEBIAN_FRONTEND=noninteractive apt-get upgrade -qy",
+        "sudo DEBIAN_FRONTEND=noninteractive apt-get dist-upgrade -qy",
+        "sudo apt-get autoremove -y",
+        "sudo sed -i 's/^#ListenAddress 0.0.0.0/ListenAddress 0.0.0.0/' /etc/ssh/sshd_config",
+        "echo 'net.ipv6.conf.all.disable_ipv6 = 1' | sudo tee -a /etc/sysctl.d/10-disable-ipv6.conf",
+        "echo 'net.ipv6.conf.default.disable_ipv6 = 1' | sudo tee -a /etc/sysctl.d/10-disable-ipv6.conf",
+        "echo 'net.ipv6.conf.lo.disable_ipv6 = 1' | sudo tee -a /etc/sysctl.d/10-disable-ipv6.conf"
+      ]
+    },
+    {
+      "type": "shell-local",
+      "command": "sshpass -p {{user `vm_username`}} ssh-copy-id -f -i ~/.ssh/id_rsa.pub -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no {{user `vm_username`}}@{{user `vm_name`}}"
+    },
+    {
+      "type": "ansible",
+      "playbook_file": "../../ansible/jumpcloud/playbook.yml",
+      "ansible_env_vars": [ "ANSIBLE_HOST_KEY_CHECKING=False" ],
+      "extra_arguments": [
+      "--extra-vars",
+      "jc_x_connect_key={{user `jc_x_connect_key`}}",
+      "--extra-vars",
+      "ansible_python_interpreter='/usr/bin/env python3'"
+    ]
+    },
+    {
+      "type": "shell",
+      "execute_command": "echo {{user `vm_username`}} | {{.Vars}} sudo -S bash -x '{{.Path}}'",
+      "scripts": [
+          "../../scripts/consul.sh"
+      ]
+    }
+  ],
+
+  "post-processors": [
+    {
+      "type": "vsphere-template",
+      "insecure": true,
+      "host": "{{user `vcsa_host`}}",
+      "username": "{{user `vcsa_username`}}",
+      "password": "{{user `vcsa_password`}}",
+      "datacenter": "{{user `vcsa_datacenter`}}",
+      "folder": "{{user `vcsa_folder`}}"
+    }
+  ]
+}

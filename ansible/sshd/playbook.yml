@@ -1,0 +1,87 @@
+---
+- hosts: all
+  become: yes
+
+  handlers:
+    - name: restart sshd
+      service: name=sshd state=restarted
+
+  tasks:
+    - name: backup sshd_config
+      copy:
+        src: /etc/ssh/sshd_config
+        dest: /etc/ssh/sshd_config.bak
+        owner: root
+        group: root
+        mode: 0644
+        backup: yes
+
+    - name: checking ListenAddress
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        state: present
+        regexp: '^ListenAddress\s'
+        line: 'ListenAddress 0.0.0.0'
+      notify:
+        - restart sshd
+
+    - name: checking PermitRootLogin
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        state: present
+        regexp: '^PermitRootLogin\s'
+        line: 'PermitRootLogin no'
+      notify:
+        - restart sshd
+
+    - name: checking PasswordAuthentication
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        state: present
+        regexp: '^PasswordAuthentication\s'
+        line: 'PasswordAuthentication no'
+      notify:
+        - restart sshd
+
+    - name: checking ChallengeResponseAuthentication
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        state: present
+        regexp: '^ChallengeResponseAuthentication\s'
+        line: 'ChallengeResponseAuthentication no'
+      notify:
+        - restart sshd
+
+    - name: checking UseDNS
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        state: present
+        regexp: '^UseDNS\s'
+        line: 'UseDNS no'
+      notify:
+        - restart sshd
+
+  #  - name: checking AllowGroups
+  #    lineinfile:
+  #      path: /etc/ssh/sshd_config
+  #      state: present
+  #      regexp: '^AllowGroups\s'
+  #      line: 'AllowGroups wheel'
+  #    notify:
+  #      - restart sshd
+
+  #    - name: checking UsePAM
+  #      lineinfile:
+  #        path: /etc/ssh/sshd_config
+  #        state: present
+  #        regexp: '^UsePAM\s'
+  #        line: 'UsePAM no'
+  #      notify:
+  #        - restart sshd  
+
+    - name: permissions sshd_config
+      file:
+        path: /etc/ssh/sshd_config
+        owner: root
+        group: root
+        mode: 0644

@@ -1,0 +1,96 @@
+{
+  "builders": [{
+    "name": "{{user `vm_name`}}",
+    "vm_name": "{{user `vm_name`}}_{{isotime \"2006-01-02\"}}",
+    "type": "vmware-iso",
+    "guest_os_type": "centos7-64",
+    "headless": false,
+
+    "iso_urls": [
+      "Fedora-Server-dvd-x86_64-28-1.1.iso",
+      "https://download.fedoraproject.org/pub/fedora/linux/releases/28/Server/x86_64/iso/Fedora-Server-dvd-x86_64-28-1.1.iso"
+    ],
+    "iso_checksum": "8d59a25052e05758c15fe9daa3bc472b5619791b442e752450bba7f1eeca9c1a",
+    "iso_checksum_type": "sha256",
+
+    "ssh_username": "{{user `vm_username`}}",
+    "ssh_password": "{{user `vm_username`}}",
+    "ssh_timeout": "15m",
+
+    "vnc_port_min": "5900",
+    "vnc_port_max": "5911",
+    "vnc_bind_address": "0.0.0.0",
+    "vnc_disable_password": "true",
+
+    "http_directory": "http",
+
+    "vmdk_name": "{{user `vm_name`}}",
+    "disk_size": 25600,
+    "disk_type_id": "thin",
+
+    "boot_command": [
+      "<tab> text ks=http://{{.HTTPIP}}:{{.HTTPPort}}/ks.cfg<enter><wait> ksdevice=eth0 net.ifnames=0 biosdevname=0"
+    ],
+
+    "shutdown_command": "echo {{user `vm_username`}} | sudo -S /sbin/halt -h -p",
+
+    "remote_type": "esx5",
+    "remote_host": "{{user `esxi_host`}}",
+    "remote_datastore": "{{user `esxi_datastore`}}",
+    "remote_username": "{{user `esxi_username`}}",
+    "remote_password": "{{user `esxi_password`}}",
+    "keep_registered": true,
+    "skip_export": true,
+
+    "vmx_data": {
+      "virtualHW.version": "14",
+      "ethernet0.networkName": "{{user `vm_network`}}",
+      "ethernet0.present": "TRUE",
+      "ethernet0.virtualDev": "vmxnet3",
+      "ethernet0.addressType": "static",
+      "ethernet0.address": "{{user `vm_mac`}}",
+      "memsize": "1024",
+      "numvcpus": "1",
+      "cpuid.coresPerSocket": "1",
+      "annotation": "{{user `vm_name`}}_{{isotime \"2006-01-02\"}}"
+    },
+    "vmx_data_post": {
+      "ethernet0.addressType": "generated"
+    }
+  }],
+
+ "provisioners": [
+    {
+      "type": "shell-local",
+      "command": "sshpass -p {{user `vm_username`}} ssh-copy-id -f -i ~/.ssh/id_rsa.pub -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no {{user `vm_username`}}@{{user `vm_name`}}"
+    },
+    {
+      "type": "ansible",
+      "playbook_file": "../../ansible/sshd/playbook.yml",
+      "ansible_env_vars": [ "ANSIBLE_HOST_KEY_CHECKING=False" ],
+      "extra_arguments": [
+      "--extra-vars",
+      "ansible_python_interpreter='/usr/bin/env python3'"
+    ]
+    },
+    {
+      "type": "shell",
+      "execute_command": "echo {{user `vm_username`}} | {{.Vars}} sudo -S bash -x '{{.Path}}'",
+      "scripts": [
+          "../../scripts/consul.sh"
+      ]
+    }
+  ],
+
+  "post-processors": [
+    {
+      "type": "vsphere-template",
+      "insecure": true,
+      "host": "{{user `vcsa_host`}}",
+      "username": "{{user `vcsa_username`}}",
+      "password": "{{user `vcsa_password`}}",
+      "datacenter": "{{user `vcsa_datacenter`}}",
+      "folder": "{{user `vcsa_folder`}}"
+    }
+  ]
+}

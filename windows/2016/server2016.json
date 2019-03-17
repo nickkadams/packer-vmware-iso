@@ -1,0 +1,92 @@
+{
+  "builders": [{
+    "name": "{{user `vm_name`}}",
+    "vm_name": "{{user `vm_name`}}",
+    "type": "vmware-iso",
+    "guest_os_type": "windows9srv-64",
+    "headless": false,
+
+    "iso_urls": [
+      "Windows_Server_2016_Datacenter_EVAL_en-us_14393_refresh.ISO",
+      "https://software-download.microsoft.com/download/pr/Windows_Server_2016_Datacenter_EVAL_en-us_14393_refresh.ISO"
+    ],
+    "iso_checksum": "1ce702a578a3cb1ac3d14873980838590f06d5b7101c5daaccbac9d73f1fb50f",
+    "iso_checksum_type": "sha256",
+
+    "boot_wait": "6m",
+    "communicator": "winrm",
+
+    "winrm_username": "{{user `vm_username`}}",
+    "winrm_password": "{{user `vm_username`}}",
+    "winrm_port": "5986",
+    "winrm_use_ssl": true,
+    "winrm_insecure": true,
+    "winrm_timeout": "6h",
+
+    "vnc_port_min": "5900",
+    "vnc_port_max": "5911",
+    "vnc_bind_address": "0.0.0.0",
+    "vnc_disable_password": "true",
+
+    "floppy_files": [
+       "./answer_files/autounattend.xml",
+       "./scripts/disable-screensaver.ps1",
+       "./scripts/enable-winrm.ps1",
+       "./scripts/microsoft-updates.bat",
+       "./scripts/win-updates.ps1"
+     ],
+
+    "vmdk_name": "{{user `vm_name`}}",
+    "disk_size": 51200,
+    "disk_type_id": "thin",
+
+    "shutdown_command": "shutdown /s /t 10 /f /d p:4:1 /c \"Packer Shutdown\"",
+
+    "remote_type": "esx5",
+    "remote_host": "{{user `esxi_host`}}",
+    "remote_datastore": "{{user `esxi_datastore`}}",
+    "remote_username": "{{user `esxi_username`}}",
+    "remote_password": "{{user `esxi_password`}}",
+    "keep_registered": true,
+    "skip_export": true,
+
+    "vmx_data": {
+      "virtualHW.version": "14",
+      "ethernet0.networkName": "{{user `vm_network`}}",
+      "ethernet0.present": "TRUE",
+      "ethernet0.virtualDev": "e1000e",
+      "ethernet0.addressType": "static",
+      "ethernet0.address": "{{user `vm_mac`}}",
+      "memsize": "4096",
+      "numvcpus": "2",
+      "cpuid.coresPerSocket": "1",
+      "scsi0.virtualDev": "lsisas1068"
+    },
+    "vmx_data_post": {
+      "ethernet0.addressType": "generated"
+    }
+  }],
+
+  "provisioners": [
+  {
+    "execute_command": "{{ .Vars }} cmd /c \"{{ .Path }}\"",
+    "scripts": [
+      "./scripts/enable-rdp.bat",
+      "./scripts/vm-tools.bat"
+    ],
+    "type": "windows-shell"
+  }
+],
+
+  "post-processors": [
+    {
+      "type": "vsphere-template",
+      "insecure": true,
+      "host": "{{user `vcsa_host`}}",
+      "username": "{{user `vcsa_username`}}",
+      "password": "{{user `vcsa_password`}}",
+      "datacenter": "{{user `vcsa_datacenter`}}",
+      "folder": "{{user `vcsa_folder`}}"
+    }
+  ]
+}

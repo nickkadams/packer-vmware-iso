@@ -1,0 +1,89 @@
+---
+- hosts: all
+  become: yes
+
+  vars_files:
+    - vars.yml
+
+  handlers:
+    - name: restart jcagent
+      service: name=jcagent state=restarted
+
+  tasks:
+    - name: install jc dependencies
+      package:
+        state: latest
+        name:
+          - coreutils
+          - curl
+          - grep
+          - lsof
+          - ntpdate
+          - sudo
+          - tar
+
+    - name: centos and rhel dependencies
+      yum:
+        state: latest
+        name:
+          - chkconfig
+          - findutils
+          - gawk
+          - glibc-common
+          - initscripts
+          - net-tools
+          - rpm
+          - shadow-utils
+          - util-linux
+          - which
+          - yum
+          - psmisc
+          - redhat-lsb-core
+      when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux' and ansible_distribution_major_version >= "6"
+
+    - name: ubuntu dependencies
+      apt:
+        state: latest
+        name:
+          - apt-rdepends
+          - apt-show-versions
+          - dpkg
+          - hostname
+          - libc-bin
+          - lsb-release
+          - mawk
+          - passwd
+          - procps
+          - sysvinit-utils
+          - gdebi-core
+      when: ansible_distribution == 'Ubuntu' and ansible_distribution_major_version >= "16"
+
+    - name: test for jcagent
+      stat:
+        path: /opt/jc/bin/jcagent
+      register: file_details
+
+    - name: sync time
+      shell: 'ntpdate -u pool.ntp.org'
+      when: file_details.stat.exists == False
+
+    - name: install jc
+      shell: "curl --tlsv1.2 --silent --show-error --header 'x-connect-key: {{ jc_x_connect_key }}' https://kickstart.jumpcloud.com/Kickstart | sudo bash"
+      args:
+        warn: false
+      when: file_details.stat.exists == false
+
+    - name: stop jcagent but enable boot
+      service: "name={{ item }} state=stopped enabled=yes"
+      with_items:
+        - jcagent
+
+    - name: delete files for imaging
+      file:
+        path: "/opt/jc/{{ item }}"
+        state: absent
+      with_items:
+        - ca.crt
+        - client.crt
+        - client.key
+        - jcagent.conf

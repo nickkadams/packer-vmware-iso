@@ -1,0 +1,16 @@
+{
+  "vm_name": "ubuntu18",
+  "vm_username": "ansible", 
+  "esxi_host": "ESXI_HOST",
+  "esxi_datastore": "ds00",
+  "esxi_username": "root",
+  "esxi_password": "ESXI_PASSWORD",
+  "vm_network": "vlan0",
+  "vm_mac": "00:00:00:00:00:00",
+  "vcsa_host": "VCSA_HOST",
+  "vcsa_username": "administrator@vsphere.local",
+  "vcsa_password": "VCSA_PASSWORD",
+  "vcsa_datacenter": "DATACENTER",
+  "vcsa_folder": "/templates",
+  "jc_x_connect_key": "abcd000000000000000000000000000000000000"
+}

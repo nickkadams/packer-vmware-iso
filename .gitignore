@@ -1,5 +1,23 @@
+# MacOS
+.DS_Store
+
 # Cache objects
 packer_cache/
 
+# OVF output
+output-*/
+
 # For built boxes
 *.box
+
+# For secrets
+variables.json
+
+# Crash log
+crash.log
+
+# ISOs
+*.iso
+
+# Ansible
+playbook.retry
