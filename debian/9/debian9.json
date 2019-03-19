@@ -1,0 +1,130 @@
+{
+  "builders": [{
+    "name": "{{user `vm_name`}}",
+    "vm_name": "{{user `vm_name`}}_{{isotime \"2006-01-02\"}}",
+    "type": "vmware-iso",
+    "guest_os_type": "debian9-64",
+    "headless": false,
+
+    "iso_urls": [
+      "debian-9.8.0-amd64-xfce-CD-1.iso",
+      "https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-9.8.0-amd64-xfce-CD-1.iso"
+    ],
+    "iso_checksum": "06888814f7c3d696473e85bb7d9d39cbd98ba409163944d046ff94b71aabae5b",
+    "iso_checksum_type": "sha256",
+
+    "ssh_username": "{{user `vm_username`}}",
+    "ssh_password": "{{user `vm_username`}}",
+    "ssh_timeout": "15m",
+
+    "vnc_port_min": "5900",
+    "vnc_port_max": "5911",
+    "vnc_bind_address": "0.0.0.0",
+    "vnc_disable_password": "true",
+
+    "http_directory": "http",
+
+    "vmdk_name": "{{user `vm_name`}}",
+    "disk_size": 25600,
+    "disk_type_id": "thin",
+
+    "boot_command": [
+      "<esc><wait>",
+      "install <wait>",
+      "preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed9.cfg <wait>",
+      "debian-installer=en_US.UTF-8 <wait>",
+      "auto <wait>",
+      "locale=en_US.UTF-8 <wait>",
+      "kbd-chooser/method=us <wait>",
+      "keyboard-configuration/xkb-keymap=us <wait>",
+      "netcfg/get_hostname={{user `vm_name`}} <wait>",
+      "netcfg/get_domain=internal <wait>",
+      "fb=false <wait>",
+      "debconf/frontend=noninteractive <wait>",
+      "console-setup/ask_detect=false <wait>",
+      "console-keymaps-at/keymap=us <wait>",
+      "grub-installer/bootdev=/dev/sda <wait>",
+      "net.ifnames=0 biosdevname=0 <wait>",
+      "ipv6.disable=1 <wait>",
+      "<enter><wait>"
+    ],
+
+    "shutdown_command": "echo {{user `vm_username`}} | sudo -S /sbin/halt -h -p",
+
+    "remote_type": "esx5",
+    "remote_host": "{{user `esxi_host`}}",
+    "remote_datastore": "{{user `esxi_datastore`}}",
+    "remote_username": "{{user `esxi_username`}}",
+    "remote_password": "{{user `esxi_password`}}",
+    "keep_registered": true,
+    "skip_export": true,
+
+    "vmx_data": {
+      "virtualHW.version": "14",
+      "ethernet0.networkName": "{{user `vm_network`}}",
+      "ethernet0.present": "TRUE",
+      "ethernet0.virtualDev": "vmxnet3",
+      "ethernet0.addressType": "static",
+      "ethernet0.address": "{{user `vm_mac`}}",
+      "memsize": "1024",
+      "numvcpus": "1",
+      "cpuid.coresPerSocket": "1",
+      "annotation": "{{user `vm_name`}}_{{isotime \"2006-01-02\"}}"
+    },
+    "vmx_data_post": {
+      "ethernet0.addressType": "generated"
+    }
+  }],
+
+ "provisioners": [
+    {
+      "type": "shell",
+      "inline": [
+        "sudo usermod -G sudo {{user `vm_username`}}",
+        "sudo usermod -a -G systemd-journal {{user `vm_username`}}",
+        "sudo sed -i '/deb cdrom/s/^/#/g' /etc/apt/sources.list",
+        "sudo apt-get update -qy",
+        "sudo DEBIAN_FRONTEND=noninteractive apt-get upgrade -qy",
+        "sudo DEBIAN_FRONTEND=noninteractive apt-get dist-upgrade -qy",
+        "sudo apt-get autoremove -y",
+        "sudo sed -i 's/^#ListenAddress 0.0.0.0/ListenAddress 0.0.0.0/' /etc/ssh/sshd_config",
+        "echo 'net.ipv6.conf.all.disable_ipv6 = 1' | sudo tee -a /etc/sysctl.d/10-disable-ipv6.conf",
+        "echo 'net.ipv6.conf.default.disable_ipv6 = 1' | sudo tee -a /etc/sysctl.d/10-disable-ipv6.conf",
+        "echo 'net.ipv6.conf.lo.disable_ipv6 = 1' | sudo tee -a /etc/sysctl.d/10-disable-ipv6.conf"
+      ]
+    },
+    {
+      "type": "shell-local",
+      "command": "sshpass -p {{user `vm_username`}} ssh-copy-id -f -i ~/.ssh/id_rsa.pub -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no {{user `vm_username`}}@{{user `vm_name`}}"
+    },
+    {
+      "type": "ansible",
+      "playbook_file": "../../ansible/jumpcloud/playbook.yml",
+      "ansible_env_vars": [ "ANSIBLE_HOST_KEY_CHECKING=False" ],
+      "extra_arguments": [
+      "--extra-vars",
+      "jc_x_connect_key={{user `jc_x_connect_key`}}"
+    ]
+    },
+    {
+      "type": "shell",
+      "execute_command": "echo {{user `vm_username`}} | {{.Vars}} sudo -S bash -x '{{.Path}}'",
+      "scripts": [
+          "../../scripts/consul.sh",
+          "./scripts/net.sh"
+      ]
+    }
+  ],
+
+  "post-processors": [
+    {
+      "type": "vsphere-template",
+      "insecure": true,
+      "host": "{{user `vcsa_host`}}",
+      "username": "{{user `vcsa_username`}}",
+      "password": "{{user `vcsa_password`}}",
+      "datacenter": "{{user `vcsa_datacenter`}}",
+      "folder": "{{user `vcsa_folder`}}"
+    }
+  ]
+}
