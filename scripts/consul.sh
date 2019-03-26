@@ -10,7 +10,7 @@ CONSUL_SRV4="192.168.1.44"
 CONSUL_SRV5="192.168.1.45"
 
 sudo groupadd --gid ${ACCOUNT_ID} consul
-sudo useradd --gid ${ACCOUNT_ID} --uid ${ACCOUNT_ID} --comment "consul" --create-home consul
+sudo useradd --gid ${ACCOUNT_ID} --uid ${ACCOUNT_ID} --comment "consul" --create-home --shell /bin/bash consul 
 sudo mkdir -p /etc/consul.d
 sudo mkdir /var/consul
 sudo chown consul:consul /var/consul
