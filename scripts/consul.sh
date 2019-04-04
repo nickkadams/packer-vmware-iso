@@ -1,7 +1,7 @@
 #!/bin/bash -eux
 
 ACCOUNT_ID="120"
-CONSUL_VERSION="1.4.3"
+CONSUL_VERSION="1.4.4"
 CONSUL_DC="us-east1"
 CONSUL_SRV1="192.168.1.41"
 CONSUL_SRV2="192.168.1.42"
@@ -10,7 +10,7 @@ CONSUL_SRV4="192.168.1.44"
 CONSUL_SRV5="192.168.1.45"
 
 sudo groupadd --gid ${ACCOUNT_ID} consul
-sudo useradd --gid ${ACCOUNT_ID} --uid ${ACCOUNT_ID} --comment "consul" --create-home --shell /bin/bash consul 
+sudo useradd --gid ${ACCOUNT_ID} --uid ${ACCOUNT_ID} --comment "consul" --create-home --shell /bin/bash consul
 sudo mkdir -p /etc/consul.d
 sudo mkdir /var/consul
 sudo chown consul:consul /var/consul
