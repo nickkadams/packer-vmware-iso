@@ -87,6 +87,7 @@
         "echo 'net.ipv6.conf.all.disable_ipv6 = 1' | sudo tee -a /etc/sysctl.d/10-disable-ipv6.conf",
         "echo 'net.ipv6.conf.default.disable_ipv6 = 1' | sudo tee -a /etc/sysctl.d/10-disable-ipv6.conf",
         "echo 'net.ipv6.conf.lo.disable_ipv6 = 1' | sudo tee -a /etc/sysctl.d/10-disable-ipv6.conf",
+        "sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 10",
         "sudo systemctl stop chrony"
       ]
     },
@@ -100,7 +101,9 @@
       "ansible_env_vars": [ "ANSIBLE_HOST_KEY_CHECKING=False" ],
       "extra_arguments": [
       "--extra-vars",
-      "jc_x_connect_key={{user `jc_x_connect_key`}}"
+      "jc_x_connect_key={{user `jc_x_connect_key`}}",
+      "--extra-vars",
+      "ansible_python_interpreter='/usr/bin/env python3'"
     ]
     },
     {
