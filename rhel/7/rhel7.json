@@ -43,7 +43,7 @@
     "skip_export": true,
 
     "vmx_data": {
-      "virtualHW.version": "14",
+      "virtualHW.version": "15",
       "ethernet0.networkName": "{{user `vm_network`}}",
       "ethernet0.present": "TRUE",
       "ethernet0.virtualDev": "vmxnet3",
@@ -70,7 +70,8 @@
         "sudo subscription-manager register --auto-attach --username={{user `rhs_username`}} --password={{user `rhs_password`}}",
         "sudo yum update -y",
         "sudo yum upgrade -y",
-        "sudo yum check-update"
+        "sudo yum check-update",
+        "sudo systemctl stop chronyd"
       ]
     },
     {

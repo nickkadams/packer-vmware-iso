@@ -57,7 +57,7 @@
     "skip_export": true,
 
     "vmx_data": {
-      "virtualHW.version": "14",
+      "virtualHW.version": "15",
       "ethernet0.networkName": "{{user `vm_network`}}",
       "ethernet0.present": "TRUE",
       "ethernet0.virtualDev": "vmxnet3",
@@ -86,7 +86,8 @@
         "sudo sed -i 's/^#ListenAddress 0.0.0.0/ListenAddress 0.0.0.0/' /etc/ssh/sshd_config",
         "echo 'net.ipv6.conf.all.disable_ipv6 = 1' | sudo tee -a /etc/sysctl.d/10-disable-ipv6.conf",
         "echo 'net.ipv6.conf.default.disable_ipv6 = 1' | sudo tee -a /etc/sysctl.d/10-disable-ipv6.conf",
-        "echo 'net.ipv6.conf.lo.disable_ipv6 = 1' | sudo tee -a /etc/sysctl.d/10-disable-ipv6.conf"
+        "echo 'net.ipv6.conf.lo.disable_ipv6 = 1' | sudo tee -a /etc/sysctl.d/10-disable-ipv6.conf",
+        "sudo systemctl stop chrony"
       ]
     },
     {

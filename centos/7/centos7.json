@@ -43,7 +43,7 @@
     "skip_export": true,
 
     "vmx_data": {
-      "virtualHW.version": "14",
+      "virtualHW.version": "15",
       "ethernet0.networkName": "{{user `vm_network`}}",
       "ethernet0.present": "TRUE",
       "ethernet0.virtualDev": "vmxnet3",
@@ -63,6 +63,12 @@
     {
       "type": "shell-local",
       "command": "sshpass -p {{user `vm_username`}} ssh-copy-id -f -i ~/.ssh/id_rsa.pub -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no {{user `vm_username`}}@{{user `vm_name`}}"
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "sudo systemctl stop chronyd"
+      ]
     },
     {
       "type": "ansible",

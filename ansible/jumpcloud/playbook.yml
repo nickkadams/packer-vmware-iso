@@ -14,11 +14,12 @@
       package:
         state: latest
         name:
+          - chrony
           - coreutils
           - curl
           - grep
           - lsof
-          - ntpdate
+          #- ntpdate
           - sudo
           - tar
 
@@ -86,7 +87,8 @@
       register: file_details
 
     - name: sync time
-      shell: "ntpdate -u pool.ntp.org"
+      #shell: "ntpdate -u pool.ntp.org"
+      shell: "chronyd -q 'pool pool.ntp.org iburst'"
       when: file_details.stat.exists == False
 
     - name: install jc
