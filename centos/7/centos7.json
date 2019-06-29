@@ -67,7 +67,8 @@
     {
       "type": "shell",
       "inline": [
-        "sudo systemctl stop chronyd"
+        "sudo systemctl stop chronyd",
+        "sudo yum install -q -y ansible"
       ]
     },
     {

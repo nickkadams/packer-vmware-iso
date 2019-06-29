@@ -3,19 +3,19 @@
     "name": "{{user `vm_name`}}",
     "vm_name": "{{user `vm_name`}}_{{isotime \"2006-01-02\"}}",
     "type": "vmware-iso",
-    "guest_os_type": "rhel8-64",
+    "guest_os_type": "rhel6-64",
     "headless": false,
 
     "iso_urls": [
-      "rhel-8.0-x86_64-dvd.iso"
+      "CentOS-6.10-x86_64-bin-DVD1.iso",
+      "http://repo1.ash.innoscale.net/centos/6/isos/x86_64/CentOS-6.10-x86_64-bin-DVD1.iso"
     ],
-    "iso_checksum": "005d4f88fff6d63b0fc01a10822380ef52570edd8834321de7be63002cc6cc43",
+    "iso_checksum": "a68e46970678d4d297d46086ae2efdd3e994322d6d862ff51dcce25a0759e41c",
     "iso_checksum_type": "sha256",
 
     "ssh_username": "{{user `vm_username`}}",
     "ssh_password": "{{user `vm_username`}}",
     "ssh_timeout": "15m",
-    "ssh_pty": true,
 
     "vnc_port_min": "5900",
     "vnc_port_max": "5911",
@@ -67,19 +67,21 @@
     {
       "type": "shell",
       "inline": [
-        "sudo subscription-manager register --auto-attach --username={{user `rhs_username`}} --password={{user `rhs_password`}}",
-        "sudo yum update -y",
-        "sudo yum upgrade -y",
-        "sudo yum check-update",
-        "sudo systemctl stop chronyd"
+        "sudo service chronyd stop",
+        "sudo yum install -q -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm",
+        "sudo yum install -q -y ansible"
       ]
     },
     {
-      "type": "shell",
-      "execute_command": "echo {{user `vm_username`}} | {{.Vars}} sudo -S bash -x '{{.Path}}'",
-      "scripts": [
-        "../../scripts/consul.sh"
-      ]
+      "type": "ansible",
+      "playbook_file": "../../ansible/jumpcloud/playbook.yml",
+      "ansible_env_vars": [ "ANSIBLE_HOST_KEY_CHECKING=False" ],
+      "extra_arguments": [ "--extra-vars", "jc_x_connect_key={{user `jc_x_connect_key`}}" ]
+    },
+    {
+      "type": "ansible",
+      "playbook_file": "../../ansible/sshd/playbook.yml",
+      "ansible_env_vars": [ "ANSIBLE_HOST_KEY_CHECKING=False" ]
     }
   ],
 

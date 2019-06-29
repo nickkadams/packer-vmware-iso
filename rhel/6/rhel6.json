@@ -3,13 +3,13 @@
     "name": "{{user `vm_name`}}",
     "vm_name": "{{user `vm_name`}}_{{isotime \"2006-01-02\"}}",
     "type": "vmware-iso",
-    "guest_os_type": "rhel8-64",
+    "guest_os_type": "rhel6-64",
     "headless": false,
 
     "iso_urls": [
-      "rhel-8.0-x86_64-dvd.iso"
+      "rhel-server-6.10-x86_64-dvd.iso"
     ],
-    "iso_checksum": "005d4f88fff6d63b0fc01a10822380ef52570edd8834321de7be63002cc6cc43",
+    "iso_checksum": "1e15f9202d2cdd4b2bdf9d6503a8543347f0cb8cc06ba9a0dfd2df4fdef5c727",
     "iso_checksum_type": "sha256",
 
     "ssh_username": "{{user `vm_username`}}",
@@ -71,14 +71,9 @@
         "sudo yum update -y",
         "sudo yum upgrade -y",
         "sudo yum check-update",
-        "sudo systemctl stop chronyd"
-      ]
-    },
-    {
-      "type": "shell",
-      "execute_command": "echo {{user `vm_username`}} | {{.Vars}} sudo -S bash -x '{{.Path}}'",
-      "scripts": [
-        "../../scripts/consul.sh"
+        "sudo service chronyd stop",
+        "sudo yum install -q -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm",
+        "sudo yum install -q -y ansible"
       ]
     }
   ],
