@@ -1,9 +1,10 @@
 {
+  "min_packer_version": "1.4.1",  
   "builders": [{
     "name": "{{user `vm_name`}}",
     "vm_name": "{{user `vm_name`}}_{{isotime \"2006-01-02\"}}",
     "type": "vmware-iso",
-    "guest_os_type": "centos7-64",
+    "guest_os_type": "fedora-64",
     "headless": false,
 
     "iso_urls": [
