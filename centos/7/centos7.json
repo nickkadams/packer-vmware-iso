@@ -1,5 +1,5 @@
 {
-  "min_packer_version": "1.4.1",  
+  "min_packer_version": "1.4.1",
   "builders": [{
     "name": "{{user `vm_name`}}",
     "vm_name": "{{user `vm_name`}}_{{isotime \"2006-01-02\"}}",
@@ -68,8 +68,7 @@
     {
       "type": "shell",
       "inline": [
-        "sudo systemctl stop chronyd",
-        "sudo yum install -q -y ansible"
+        "sudo systemctl stop chronyd"
       ]
     },
     {

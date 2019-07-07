@@ -1,5 +1,5 @@
 {
-  "min_packer_version": "1.4.1",  
+  "min_packer_version": "1.4.1",
   "builders": [{
     "name": "{{user `vm_name`}}",
     "vm_name": "{{user `vm_name`}}_{{isotime \"2006-01-02\"}}",
@@ -72,9 +72,7 @@
         "sudo yum update -y",
         "sudo yum upgrade -y",
         "sudo yum check-update",
-        "sudo service chronyd stop",
-        "sudo yum install -q -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm",
-        "sudo yum install -q -y ansible"
+        "sudo service chronyd stop"
       ]
     }
   ],
