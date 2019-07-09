@@ -1,5 +1,5 @@
 {
-  "min_packer_version": "1.4.1",
+  "min_packer_version": "1.4.2",
   "builders": [{
     "name": "{{user `vm_name`}}",
     "vm_name": "{{user `vm_name`}}_{{isotime \"2006-01-02\"}}",
@@ -73,7 +73,7 @@
         "sudo yum upgrade -y -q",
         "sudo subscription-manager repos --enable ansible-2.8-for-rhel-8-x86_64-rpms",
         "sudo yum install -y -q ansible",
-        "sudo yum check-update",        
+        "sudo yum check-update",
         "sudo systemctl stop chronyd"
       ]
     },

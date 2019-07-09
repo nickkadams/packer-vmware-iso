@@ -1,5 +1,5 @@
 {
-  "min_packer_version": "1.4.1",
+  "min_packer_version": "1.4.2",
   "builders": [{
     "name": "{{user `vm_name`}}",
     "vm_name": "{{user `vm_name`}}_{{isotime \"2006-01-02\"}}",
@@ -68,6 +68,7 @@
     {
       "type": "shell",
       "inline": [
+        "sudo rm -f /etc/udev/rules.d/70-persistent-net.rules",
         "sudo service chronyd stop"
       ]
     },
