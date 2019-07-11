@@ -21,3 +21,7 @@ crash.log
 
 # Ansible
 playbook.retry
+
+# Testing
+*-lvm.json
+*-lvm.cfg
