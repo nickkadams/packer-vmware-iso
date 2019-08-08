@@ -74,9 +74,7 @@
         "sudo subscription-manager repos --enable rhel-7-server-ansible-2.8-rpms",
         "sudo yum install -y -q ansible",
         "sudo yum check-update",
-        "sudo systemctl stop chronyd",
-        "sudo yum install -q -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm",
-        "sudo yum install -q -y ansible"
+        "sudo systemctl stop chronyd"
       ]
     },
     {
